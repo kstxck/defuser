@@ -5,30 +5,23 @@
 unsigned int grid_rows, grid_columns;
 
 char * grid_char_buffer;
-#define grid_char_buffer_get_cell_char(row, column)            grid_char_buffer[row * grid_columns + column]
-#define grid_char_buffer_set_cell_char(row, column, cell_char) grid_char_buffer[row * grid_columns + column] = cell_char
+#define grid_char_buffer_get_cell_char(row, column)            *(grid_char_buffer + row * grid_columns + column)
+#define grid_char_buffer_set_cell_char(row, column, cell_char) *(grid_char_buffer + row * grid_columns + column) = cell_char
 
 struct Cell * grid;
-#define grid_get_cell(row, column)       grid[row * grid_columns + column]
-#define grid_set_cell(row, column, cell) grid[row * grid_columns + column] = cell; grid_char_buffer_set_cell_char(row, column, cell_get_char(cell))
+#define grid_get_cell(row, column)       *(grid + row * grid_columns + column)
+#define grid_set_cell(row, column, cell) *(grid + row * grid_columns + column) = cell; grid_char_buffer_set_cell_char(row, column, cell_get_char(cell))
 
 #define grid_row(row)          (unsigned int row = 0; row < grid_rows; row++)
 #define grid_column(column)    (unsigned int column = 0; column < grid_columns; column++)
 #define grid_cell(row, column) grid_row(row) for grid_column(column)
 
-bool grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
-    struct Cell * new_grid             = (struct Cell *) calloc(sizeof(struct Cell), rows * columns);
-    char *        new_grid_char_buffer = (char *)        calloc(sizeof(char),        rows * columns);
-
-    if (new_grid == NULL) return false;
-
-    free(grid); free(grid_char_buffer);
-    grid = new_grid; grid_char_buffer = new_grid_char_buffer;
-
-    grid_rows = rows;
+void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
+    grid_rows    = rows;
     grid_columns = columns;
 
-    return true;
+    free(grid);             grid             = (struct Cell *) calloc(sizeof(struct Cell), rows * columns);
+    free(grid_char_buffer); grid_char_buffer = (char *)        calloc(sizeof(char),        rows * columns);
 }
 
 void grid_populate(int rows, int columns, int safe_row, int safe_column, int mines) {
