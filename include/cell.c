@@ -8,9 +8,12 @@ struct Cell {
 };
 
 char cell_get_char(struct Cell cell) {
-    if (!cell.is_revealed) {
+    if (cell.is_revealed) {
         if (cell.mine_neighbours) return '0' + cell.mine_neighbours;
-        else return ' ';
+        else {
+            if (cell.is_mine) return 'X';
+            else              return ' ';
+        }
     }
     return (cell.is_flagged) ? '!' : '?';
 }
