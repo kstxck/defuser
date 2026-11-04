@@ -4,6 +4,9 @@
 #include "cell.c"
 
 unsigned int grid_rows, grid_columns;
+unsigned int grid_mines;
+unsigned int grid_opened_cells;
+bool grid_populated;
 
 char * grid_char_buffer;
 #define grid_char_buffer_get_cell_char(row, column)            grid_char_buffer[row * grid_columns + column]
@@ -22,8 +25,7 @@ struct Cell * grid;
 
 
 void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
-    grid_rows    = rows;
-    grid_columns = columns;
+    grid_rows = rows, grid_columns = columns, grid_populated = false, grid_opened_cells = 0;
 
     free(grid);             grid             = (struct Cell *) calloc(sizeof(struct Cell), grid_rows * grid_columns);
     free(grid_char_buffer); grid_char_buffer = (char *)        calloc(sizeof(char),        grid_rows * grid_columns);
@@ -31,7 +33,8 @@ void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
     grid_print_row_seperator_calculate();
 }
 
-void grid_populate(unsigned int safe_row, unsigned int safe_column, unsigned int mines) {
+void grid_populate(unsigned int safe_row, unsigned int safe_column) {
+    unsigned int mines = grid_mines;
     for grid_cell(row, column) grid_char_buffer_set_cell_char(row, column, '?');
 
     if (mines == 0) return;
@@ -47,6 +50,52 @@ void grid_populate(unsigned int safe_row, unsigned int safe_column, unsigned int
 
         mines--;
     } while (mines);
+
+    grid_populated = true;
+}
+
+int grid_get_neighbours(unsigned int row, unsigned int column, unsigned int neighbours[static 8][2]) {
+    unsigned int neigbour_count = 0;
+
+    unsigned int start_row    = (row == 0)    ? row    : row    - 1;
+    unsigned int start_column = (column == 0) ? column : column - 1;
+    unsigned int stop_row     = (row + 1    < grid_rows - 1)    ? (row + 1)    : (grid_rows - 1);
+    unsigned int stop_column  = (column + 1 < grid_columns - 1) ? (column + 1) : (grid_columns - 1);
+
+    for (unsigned int neigbour_row = start_row;        neigbour_row <= stop_row;        neigbour_row++)
+    for (unsigned int neighbour_column = start_column; neighbour_column <= stop_column; neighbour_column++) {
+        if (neigbour_row == row && neighbour_column == column) continue;
+
+        neighbours[neigbour_count][0] = neigbour_row;
+        neighbours[neigbour_count][1] = neighbour_column;
+
+        neigbour_count++;
+    }
+
+    return neigbour_count;
+}
+
+bool grid_reveal(unsigned int row, unsigned int column) {
+    if (!grid_populated) grid_populate(row, column);
+    struct Cell cell = grid_get_cell(row, column);
+
+    if (cell.is_revealed) return false;
+    
+    cell.is_revealed = true;
+    grid_set_cell(row, column, cell); grid_opened_cells++;
+
+    if (cell.is_mine)         return true;
+    if (cell.mine_neighbours) return false;
+
+    unsigned int neighbours[8][2];
+    unsigned int neighbour_count = grid_get_neighbours(row, column, neighbours);
+
+    for (unsigned int neighbour_index = 0; neighbour_index < neighbour_count; neighbour_index++) {
+        int neighbour_row = neighbours[neighbour_index][0], neighbour_column = neighbours[neighbour_index][1];
+        grid_reveal(neighbour_row, neighbour_column);
+    }
+
+    return false;
 }
 
 // Grid Print Structure Caching
