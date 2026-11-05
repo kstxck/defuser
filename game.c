@@ -89,7 +89,7 @@ void game_start(struct GameDifficulty * game_difficulty) {
 
 int main(void) {
     unsigned int game_difficulty_index;
-    printf("Select Difficulty (1 - %u)", sizeof(game_difficulty_vector)/sizeof(struct GameDifficulty));
+    printf("Select Difficulty (1 - %u): ", sizeof(game_difficulty_vector)/sizeof(struct GameDifficulty));
     scanf("%u", &game_difficulty_index);
 
     game_start(&game_difficulty_vector[game_difficulty_index - 1]);

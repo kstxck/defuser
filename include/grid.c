@@ -175,7 +175,7 @@ void grid_print_row_seperator_calculate() {
 void grid_print() {
     fputs(GRID_PRINT_OFFSET, stdout);
     fputs(" ", stdout);
-    for grid_column(column) printf(" %d  ", column + 1);
+    for grid_column(column) printf("%2d  ", column + 1);
     puts("");
 
     fputs(GRID_PRINT_OFFSET, stdout);
