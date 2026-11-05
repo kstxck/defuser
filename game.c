@@ -1,6 +1,6 @@
 #include "include/grid.c"
 
-enum GameState {Inactive, Active, Lost, Won};
+enum   GameState      {Inactive, Active, Lost, Won};
 struct GameDifficulty {
     unsigned int grid_rows;
     unsigned int grid_columns;
@@ -10,17 +10,22 @@ struct GameDifficulty {
     {16, 16, 40},
     {30, 16, 99}
 },
-
 *Easy   = &game_difficulty_vector[0],
 *Medium = &game_difficulty_vector[1],
 *Hard   = &game_difficulty_vector[2];
 
+
+
+
+
+
+
+
+
+
 enum GameState game_state = Inactive;
 
-void game_scan_row_and_column(unsigned int * row, unsigned int * column) {
-    scanf("%u %u", row, column);
-    (*row)--, (*column)--;
-}
+void game_start(GameDifficulty * game_difficulty);
 void game_main_loop() {
     char alias = ' ';
 
@@ -63,6 +68,15 @@ void game_start(struct GameDifficulty * game_difficulty) {
 
     puts((game_state == Lost) ? "You lost, a mine decimated you..." : "You won, you dodged every mine!");
 }
+
+
+
+
+
+
+
+
+
 
 int main(void) {
     game_start(Easy);
