@@ -22,38 +22,6 @@ struct Cell * grid;
 #define grid_column(column)    (unsigned int column = 0; column < grid_columns; column++)
 #define grid_cell(row, column) grid_row(row) for grid_column(column)
 
-
-
-void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
-    grid_rows = rows, grid_columns = columns, grid_populated = false, grid_opened_cells = 0;
-
-    free(grid);             grid             = (struct Cell *) calloc(sizeof(struct Cell), grid_rows * grid_columns);
-    free(grid_char_buffer); grid_char_buffer = (char *)        calloc(sizeof(char),        grid_rows * grid_columns);
-
-    grid_print_row_seperator_calculate();
-}
-
-void grid_populate(unsigned int safe_row, unsigned int safe_column) {
-    unsigned int mines = grid_mines;
-    for grid_cell(row, column) grid_char_buffer_set_cell_char(row, column, '?');
-
-    if (mines == 0) return;
-    do {
-        unsigned int row = rand() % grid_rows, column = rand() % grid_columns;
-        if (row == safe_row && column == safe_column) continue;
-
-        struct Cell cell = grid_get_cell(row, column);
-        if (cell.is_mine) continue; else {
-            cell.is_mine = true;
-            grid_set_cell(row, column, cell);
-        }
-
-        mines--;
-    } while (mines);
-
-    grid_populated = true;
-}
-
 int grid_get_neighbours(unsigned int row, unsigned int column, unsigned int neighbours[static 8][2]) {
     unsigned int neigbour_count = 0;
 
@@ -75,8 +43,57 @@ int grid_get_neighbours(unsigned int row, unsigned int column, unsigned int neig
     return neigbour_count;
 }
 
+void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
+    grid_rows = rows, grid_columns = columns, grid_populated = false, grid_opened_cells = 0;
+
+    free(grid);             grid             = (struct Cell *) calloc(sizeof(struct Cell), grid_rows * grid_columns);
+    free(grid_char_buffer); grid_char_buffer = (char *)        calloc(sizeof(char),        grid_rows * grid_columns);
+
+    for grid_cell(row, column) grid_char_buffer_set_cell_char(row, column, cell_get_char(grid_get_cell(row, column)));
+
+    grid_print_row_seperator_calculate();
+}
+
+void grid_populate(unsigned int safe_row, unsigned int safe_column) {
+    unsigned int mines = grid_mines;
+
+    printf("Placing %u mines, safe row is %u and safe column is %u\n", grid_mines, safe_row, safe_column);
+    if (mines == 0) return;
+    do {
+        unsigned int row = rand() % grid_rows, column = rand() % grid_columns;
+        if (row == safe_row && column == safe_column) continue;
+
+        struct Cell cell = grid_get_cell(row, column);
+        if (cell.is_mine) continue; else {
+            cell.is_mine = true;
+            grid_set_cell(row, column, cell);
+            printf("Mine placed @%u,%u\n", row, column);
+        }
+
+        unsigned int neighbours[8][2];
+        unsigned int neighbour_count = grid_get_neighbours(row, column, neighbours);
+        
+        for (unsigned int neighbour_index = 0; neighbour_index < neighbour_count; neighbour_index++) {
+            unsigned int neighbour_row    = neighbours[neighbour_index][0];
+            unsigned int neighbour_column = neighbours[neighbour_index][1];
+
+            struct Cell neighbour_cell = grid_get_cell(neighbour_row, neighbour_column);
+            cell.mine_neighbours += 1;
+            grid_set_cell(neighbour_row, neighbour_column, cell);
+            printf("Incrementing mine_neighbours @%u,%u, new value: %u\n", neighbour_row, neighbour_column, cell.mine_neighbours);
+        }
+
+        mines--;
+    } while (mines);
+
+    grid_populated = true;
+}
+
 bool grid_reveal(unsigned int row, unsigned int column) {
-    if (!grid_populated) grid_populate(row, column);
+    if (!grid_populated) {
+        grid_populate(row, column);
+    }
+
     struct Cell cell = grid_get_cell(row, column);
 
     if (cell.is_revealed) return false;
@@ -84,15 +101,18 @@ bool grid_reveal(unsigned int row, unsigned int column) {
     cell.is_revealed = true;
     grid_set_cell(row, column, cell); grid_opened_cells++;
 
-    if (cell.is_mine)         return true;
-    if (cell.mine_neighbours) return false;
+    if (cell.is_mine) {
+        printf("Mine detected at @%u,%u, Mine Value: %b", row, column, cell.is_mine);
+        return true;
+    }
+    if (cell.mine_neighbours == 0) {
+        unsigned int neighbours[8][2];
+        unsigned int neighbour_count = grid_get_neighbours(row, column, neighbours);
 
-    unsigned int neighbours[8][2];
-    unsigned int neighbour_count = grid_get_neighbours(row, column, neighbours);
-
-    for (unsigned int neighbour_index = 0; neighbour_index < neighbour_count; neighbour_index++) {
-        int neighbour_row = neighbours[neighbour_index][0], neighbour_column = neighbours[neighbour_index][1];
-        grid_reveal(neighbour_row, neighbour_column);
+        for (unsigned int neighbour_index = 0; neighbour_index < neighbour_count; neighbour_index++) {
+            int neighbour_row = neighbours[neighbour_index][0], neighbour_column = neighbours[neighbour_index][1];
+            grid_reveal(neighbour_row, neighbour_column);
+        }
     }
 
     return false;
@@ -117,13 +137,12 @@ void grid_print_row_seperator_calculate() {
         strcat(grid_print_row_seperator, GRID_PRINT_ROW_SEPERATOR_COLUMN);
         strcat(grid_print_row_seperator, GRID_PRINT_ROW_SEPERATOR_CORNER);
     }
-    
 }
 
 void grid_print() {
     fputs(GRID_PRINT_OFFSET, stdout);
     fputs(" ", stdout);
-    for grid_column(column) printf("%2d  ", column + 1);
+    for grid_column(column) printf(" %d  ", column + 1);
     puts("");
 
     fputs(GRID_PRINT_OFFSET, stdout);
