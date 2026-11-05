@@ -22,49 +22,58 @@ struct GameDifficulty {
 
 
 
-
 enum GameState game_state = Inactive;
 
-void game_start(GameDifficulty * game_difficulty);
+void game_clear_screen() {
+    #ifdef _WIN32
+    system("cls");
+    #else
+    system("clear");
+    #endif
+}
+
+void game_scan_row_and_column(unsigned int * row, unsigned int * column) {
+    scanf("%u%u", row, column);
+    (*row)--; (*column)--;
+}
+
+void game_start(struct GameDifficulty * game_difficulty);
 void game_main_loop() {
-    char alias = ' ';
+    game_clear_screen();
 
     grid_print();
-    printf("Enter Instruction: ");
-    scanf("%c", &alias);
     
-    switch (alias) {
+    char instruction_alias; scanf("%c", &instruction_alias);
+    unsigned int instruction_row, instruction_column;
+    switch (instruction_alias) {
         case 'r':
-            unsigned int reveal_row, reveal_column;
-            game_scan_row_and_column(&reveal_row, &reveal_column);
+            game_scan_row_and_column(&instruction_row, &instruction_column);
 
-            if (grid_reveal(reveal_row, reveal_column)) game_state = Lost;
+            bool grid_reveal_result = grid_reveal(instruction_row, instruction_column);
+            if (grid_reveal_result) game_state = Lost;
+
             break;
         case 'f':
-            unsigned int flag_row, flag_column;
-            game_scan_row_and_column(&flag_row, &flag_column);
+            game_scan_row_and_column(&instruction_row, &instruction_column);
 
-            struct Cell cell = grid_get_cell(flag_row, flag_column);
-
+            struct Cell cell = grid_get_cell(instruction_row, instruction_column);
             cell.is_flagged = !cell.is_flagged;
-            grid_set_cell(flag_row, flag_column, cell);
 
+            grid_set_cell(instruction_row, instruction_column, cell);
             break;
         default:
-            printf("r [row][column] - reveal cell\n");
-            printf("f [row][column] - flag cell\n\n");
-            printf("Press any key to continue\n");
-            char key; scanf("%c", &key);
             break;
-    }    
+    };
+
+    if ((grid_rows * grid_columns) - grid_opened_cells <= grid_mines) game_state = Won;
 }
 
 void game_start(struct GameDifficulty * game_difficulty) {
-    grid_mines = game_difficulty -> grid_mines;
     grid_set_rows_and_columns(game_difficulty -> grid_rows, game_difficulty -> grid_columns);
+    grid_mines = game_difficulty -> grid_mines;
     
     game_state = Active;
-    while (game_state == Active) {game_main_loop();}
+    while (game_state == Active) game_main_loop();
 
     puts((game_state == Lost) ? "You lost, a mine decimated you..." : "You won, you dodged every mine!");
 }
