@@ -43,6 +43,15 @@ int grid_get_neighbours(unsigned int row, unsigned int column, unsigned int neig
     return neigbour_count;
 }
 
+
+
+
+
+
+
+
+
+
 void grid_set_rows_and_columns(unsigned int rows, unsigned int columns) {
     grid_rows = rows, grid_columns = columns, grid_populated = false, grid_opened_cells = 0;
 
@@ -89,6 +98,15 @@ void grid_populate(unsigned int safe_row, unsigned int safe_column) {
     grid_populated = true;
 }
 
+
+
+
+
+
+
+
+
+
 bool grid_reveal(unsigned int row, unsigned int column) {
     if (!grid_populated) {
         grid_populate(row, column);
@@ -117,6 +135,15 @@ bool grid_reveal(unsigned int row, unsigned int column) {
 
     return false;
 }
+
+
+
+
+
+
+
+
+
 
 // Grid Print Structure Caching
 #define GRID_PRINT_OFFSET               "   "
