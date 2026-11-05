@@ -3,6 +3,8 @@
 #include <string.h>
 #include "cell.c"
 
+void grid_print_row_seperator_calculate(); // NOTE: Defined at the bottom of the file
+
 unsigned int grid_rows, grid_columns;
 unsigned int grid_mines;
 unsigned int grid_opened_cells;
@@ -11,8 +13,6 @@ bool grid_populated;
 char * grid_char_buffer;
 #define grid_char_buffer_get_cell_char(row, column)            grid_char_buffer[row * grid_columns + column]
 #define grid_char_buffer_set_cell_char(row, column, cell_char) grid_char_buffer[row * grid_columns + column] = cell_char
-
-void grid_print_row_seperator_calculate();
 
 struct Cell * grid;
 #define grid_get_cell(row, column)       grid[row * grid_columns + column]
